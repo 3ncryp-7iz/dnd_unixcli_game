@@ -1,0 +1,162 @@
+#!/bin/bash
+
+script_name=$(basename "$0")
+log_path="tmp/exit_con/exit_condition.log"
+rm -rf /tmp/game/inventory/key.txt
+
+# script instance limit func
+spawn_check() {
+        running_instances=$(pgrep -fla "$script_name" | grep -v grep | wc -l)
+    if [ "$running_instances" -gt 2 ]; then
+        echo "Another instance of the script is already running. Please try again."
+        exit 1
+    else
+        echo "Starting the script..."
+        if ! pgrep -f "start" > /dev/null; then
+            nohup start > "$log_path" 2>&1 &
+            script_pid=$!
+        fi
+    fi
+}
+
+# win condition and clean up func
+check_win_condition() {
+    if [[ -f /tmp/inventory/key.txt ]]; then
+                echo "You swiftly pocket the key and turn around to find a shadow arching over the door-way"
+                read -p ""
+        echo "Congratulations! Challenge 1 complete. Keep hold of this flag -- 'great_b3ginn1ngs' -- for proof of completion"
+                read -p ""
+        echo "Cleaning up assets and exiting script."
+                echo ""
+                rm -rf /tmp/game/inventory/key.txt
+        echo "" > /tmp/game/exit_con/exit_condition.log
+        for game_files in /tmp/game/*; do
+            filename=$(basename "$game_files")
+            if [[ $filename != "start" ]]; then
+                rm -rf "$game_files"
+				rmdir game
+            fi
+        done
+
+        if [[ -n $script_pid ]]; then
+            kill $script_pid
+        fi
+        exit
+    fi
+}
+
+# force quit cleanup func
+cleanup() {
+        echo ""
+    echo "Performing cleanup tasks..."
+        echo ""
+	mkdir exit_con
+    echo "" > /tmp/exit_con/exit_condition.log
+    for game_files in /tmp/game/level_1/*; do
+        filename=$(basename "$game_files")
+        if [[ $filename != "start" ]]; then
+            rm -rf "$game_files"
+        fi
+    done
+    if [[ -n $script_pid ]]; then
+        kill $script_pid
+    fi
+}
+
+# chest script sequence func
+chest_seq() {
+    if [[ $user_command == "cd chest" ]]; then
+        echo ""
+        echo "You open the chest, its a mess in there"
+        echo ""
+        # cat "/tmp/game/assets/chest"
+        read -p ""
+        echo "You spend some time rummaging around and eventually find a key"
+        read -p ""
+        echo "You start to feel uneasy, a sense of overstaying your welcome... Maybe going through stuff that isnt yours wasn't the wisest idea."
+        read -p ""
+        echo "Quickly! Move it to your inventory located (Inventory directory)"
+        echo ""
+    fi
+}
+
+# environment generation func
+setup_environment() {
+    clear
+    echo "Adventure begins - Pre-checks"
+	mkdir -p /tmp/game
+    cd /tmp/game
+	mkdir -p level_1/shack/chest
+        echo "shack made"
+        cd game
+        pwd
+        echo "use a combination of cat, ls & cd commands to search around" > hint
+        echo "try googling the mv/cp command and how they work" > shack/chest/hint
+        echo "hints made"
+        echo "You inspect the key. It appears there is a message but you're unable to read it. 'a53108f7543b75adbb34afc035d4cdf6'" > shack/chest/key.txt
+        echo "key made"
+        echo "You look over at the campfire, seems like it may have been lit just the night before" > campfire
+        echo "camp made"
+        echo "Oh, a berry bush. You take a few and eat them. Tasty." > bush
+        echo "bush made"
+}
+
+# story into func
+start_adventure() {
+        clear
+        cat "/tmp/game/assets/forest"
+        echo ""
+        echo "There you are, a noble adventurer, walking through the forest of Durur. You have been warned about the threats that reside in the forest by the passing village."
+        echo "You feel a shiver, when suddenly something catches your eye through the foliage."
+        echo ""
+        read -p "[Enter] to progress"
+        echo ""
+        echo "Being the adventurer that you are, of course you investigate."
+        read -p ""
+        cat "/tmp/game/assets/door"
+        echo "Before you lies a door, ancient and mysterious, with a keyhole that whispers secrets of old."
+        echo "The key must be around here somewhere! Type 'ls -la' to get started."
+        echo ""
+        echo "Type 'cat hint' if you require a hint"
+        echo ""
+}
+
+# user interaction func
+user_interaction() {
+    current_dir=$(pwd)
+
+    while true; do
+        echo "Enter a command (type 'quit' to exit): "
+        read user_command
+
+        if [[ "$user_command" == "quit" ]]; then
+            echo "Exiting"
+            break
+        else
+        # cd interpret handler
+                if [[ "$user_command" =~ ^cd ]]; then
+                        new_dir=$(cd "$current_dir"; eval "$user_command"; pwd)
+                if [ -d "$new_dir" ]; then
+                        current_dir="$new_dir"
+                else
+                        break
+                fi
+            else
+                (cd "$current_dir"; eval "$user_command")
+            fi
+            echo ""
+            chest_seq
+            check_win_condition
+        fi
+    done
+}
+
+export PROMPT_COMMAND=chest_seq
+
+spawn_check
+setup_environment
+start_adventure
+user_interaction
+cleanup
+
+trap cleanup EXIT
