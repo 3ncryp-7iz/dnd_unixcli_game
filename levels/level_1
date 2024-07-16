@@ -1,8 +1,13 @@
 #!/bin/bash
 
 script_name=$(basename "$0")
-log_path="tmp/exit_con/exit_condition.log"
+log_path="/tmp/exit_con/exit_condition.log"
+mkdir -p /tmp/exit_con/
+mkdir -p /tmp/game/inventory/
+touch /tmp/exit_con/exit_condition.log
+echo "" > /tmp/exit_con/exit_condition.log
 rm -rf /tmp/game/inventory/key.txt
+
 
 # script instance limit func
 spawn_check() {
@@ -21,7 +26,7 @@ spawn_check() {
 
 # win condition and clean up func
 check_win_condition() {
-    if [[ -f /tmp/inventory/key.txt ]]; then
+    if [[ -f /tmp/game/inventory/key.txt ]]; then
                 echo "You swiftly pocket the key and turn around to find a shadow arching over the door-way"
                 read -p ""
         echo "Congratulations! Challenge 1 complete. Keep hold of this flag -- 'great_b3ginn1ngs' -- for proof of completion"
@@ -29,12 +34,12 @@ check_win_condition() {
         echo "Cleaning up assets and exiting script."
                 echo ""
                 rm -rf /tmp/game/inventory/key.txt
-        echo "" > /tmp/game/exit_con/exit_condition.log
+        echo "" > /tmp/exit_con/exit_condition.log
         for game_files in /tmp/game/*; do
             filename=$(basename "$game_files")
             if [[ $filename != "start" ]]; then
-                rm -rf "$game_files"
-				rmdir game
+		rm -rf /tmp/game/
+		rm -rf /tmp/exit_con/
             fi
         done
 
@@ -52,10 +57,11 @@ cleanup() {
         echo ""
 	mkdir exit_con
     echo "" > /tmp/exit_con/exit_condition.log
-    for game_files in /tmp/game/level_1/*; do
+    for game_files in /tmp/game/*; do
         filename=$(basename "$game_files")
         if [[ $filename != "start" ]]; then
-            rm -rf "$game_files"
+		rm -rf /tmp/game/
+		rm -rf /tmp/exit_con/
         fi
     done
     if [[ -n $script_pid ]]; then
@@ -75,7 +81,7 @@ chest_seq() {
         read -p ""
         echo "You start to feel uneasy, a sense of overstaying your welcome... Maybe going through stuff that isnt yours wasn't the wisest idea."
         read -p ""
-        echo "Quickly! Move it to your inventory located (Inventory directory)"
+        echo "Quickly! Move it to your inventory located /tmp/game/inventory/"
         echo ""
     fi
 }
@@ -84,11 +90,10 @@ chest_seq() {
 setup_environment() {
     clear
     echo "Adventure begins - Pre-checks"
-	mkdir -p /tmp/game
-    cd /tmp/game
-	mkdir -p level_1/shack/chest
+	mkdir /tmp/game/level_1/
+    cd /tmp/game/level_1
+	mkdir -p shack/chest
         echo "shack made"
-        cd game
         pwd
         echo "use a combination of cat, ls & cd commands to search around" > hint
         echo "try googling the mv/cp command and how they work" > shack/chest/hint
@@ -150,8 +155,6 @@ user_interaction() {
         fi
     done
 }
-
-export PROMPT_COMMAND=chest_seq
 
 spawn_check
 setup_environment
