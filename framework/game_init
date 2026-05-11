@@ -5,7 +5,7 @@
 # script instance limit func
 spawn_check() {
         running_instances=$(pgrep -fla "$script_name" | grep -v grep | wc -l)
-    if [ "$running_instances" -gt 1 ]; then
+    if [ "$running_instances" -gt 2 ]; then
         echo "Another instance of the script is already running. Please try again."
         exit 1
     else
@@ -87,7 +87,7 @@ level_1() {
 			echo ""
 			echo "You open the chest, its a mess in there"
 			echo ""
-			# cat "/tmp/game/assets/chest"
+			cat "/tmp/game/assets/chest"
 			read -p ""
 			echo "You spend some time rummaging around and eventually find a key"
 			read -p ""
@@ -102,10 +102,13 @@ level_1() {
 	spawn_environment() {
 		clear
 		echo "Adventure begins - Pre-checks"
-		mkdir /tmp/game/level_1/
-		cd /tmp/game/level_1
-		mkdir -p shack/chest
+		mkdir -p /tmp/game/level_1/shack/chest
+		mkdir /tmp/game/assets
+		mkdir /tmp/game/inventory
+		cp ~/GH/dnd_unixcli_game/framework/assets/* /tmp/game/assets/
 		echo "shack made"
+		cd /tmp/game/level_1
+		
 		pwd
 		echo "use a combination of cat, ls & cd commands to search around" > hint
 		echo "try googling the mv/cp command and how they work" > shack/chest/hint
@@ -121,7 +124,7 @@ level_1() {
 	# story into func
 	start_adventure() {
 		clear
-		cat "/tmp/game/assets/forest"
+		cat "/tmp/game/assets/cabin"
 		echo ""
 		echo "There you are, a noble adventurer, walking through the forest of Durur. You have been warned about the threats that reside in the forest by the passing village."
 		echo "You feel a shiver, when suddenly something catches your eye through the foliage."
@@ -131,6 +134,7 @@ level_1() {
 		echo "Being the adventurer that you are, of course you investigate."
 		read -p ""
 		cat "/tmp/game/assets/door"
+		echo ""
 		echo "Before you lies a door, ancient and mysterious, with a keyhole that whispers secrets of old."
 		echo "The key must be around here somewhere! Type 'ls -la' to get started."
 		echo ""
