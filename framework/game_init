@@ -3,19 +3,21 @@
 # Functions to call
 
 # script instance limit func
-spawn_check() {
-        running_instances=$(pgrep -fla "$script_name" | grep -v grep | wc -l)
-    if [ "$running_instances" -gt 2 ]; then
-        echo "Another instance of the script is already running. Please try again."
-        exit 1
-    else
-        echo "Starting the script..."
-        if ! pgrep -f "start" > /dev/null; then
-            nohup start > "$log_path" 2>&1 &
-            script_pid=$!
-        fi
-    fi
-}	
+#spawn_check() 
+#{
+#         running_instances=$(pgrep -fla "$script_name" | grep -v grep | wc -l)
+#     if [ "$running_instances" -gt 2 ]; then
+#         echo "Another instance of the script is already running. Please try again."
+#         exit 1
+#     else
+#         echo "Starting the script..."
+#         if ! pgrep -f "start" > /dev/null; then
+#             nohup start > "$log_path" 2>&1 &
+#             script_pid=$!
+#         fi
+#     fi
+# }	
+
 # user interaction func
 user_interaction() {
 	current_dir=$(pwd)
@@ -41,12 +43,10 @@ user_interaction() {
 			else
 				(cd "$current_dir"; eval "$user_command")
 			fi
-			echo ""
-			chest_seq
-			check_win_condition
 		fi
 	done
 	}
+
 # force quit cleanup func
 cleanup() {
         echo ""
@@ -65,100 +65,13 @@ cleanup() {
     fi
 }
 
-# Make default game files
+# Make generic game files
 mkdir -p /tmp/exit_con/
 mkdir -p /tmp/game/inventory/
 touch /tmp/exit_con/exit_condition.log
 echo "" > /tmp/exit_con/exit_condition.log
 script_name=$(basename "$0")
 log_path="/tmp/exit_con/exit_condition.log"
-
-#temp infinite proc spawn issue fix 
-spawn_check
-
-# Levels
-# Level 1
-level_1() {
-	rm -rf /tmp/game/inventory/key.txt
-
-	# chest script sequence func
-	chest_seq() {
-		if [[ $user_command == "cd chest" ]]; then
-			echo ""
-			echo "You open the chest, its a mess in there"
-			echo ""
-			cat "/tmp/game/assets/chest"
-			read -p ""
-			echo "You spend some time rummaging around and eventually find a key"
-			read -p ""
-			echo "You start to feel uneasy, a sense of overstaying your welcome... Maybe going through stuff that isnt yours wasn't the wisest idea."
-			read -p ""
-			echo "Quickly! Move it to your inventory located /tmp/game/inventory/"
-			echo ""
-		fi
-	}
-
-	# environment generation func
-	spawn_environment() {
-		clear
-		echo "Adventure begins - Pre-checks"
-		mkdir -p /tmp/game/level_1/shack/chest
-		mkdir /tmp/game/assets
-		mkdir /tmp/game/inventory
-		cp ~/GH/dnd_unixcli_game/framework/assets/* /tmp/game/assets/
-		echo "shack made"
-		cd /tmp/game/level_1
-		
-		pwd
-		echo "use a combination of cat, ls & cd commands to search around" > hint
-		echo "try googling the mv/cp command and how they work" > shack/chest/hint
-		echo "hints made"
-		echo "You inspect the key. It appears there is a message but you're unable to read it. 'a53108f7543b75adbb34afc035d4cdf6'" > shack/chest/key.txt
-		echo "key made"
-		echo "You look over at the campfire, seems like it may have been lit just the night before" > campfire
-		echo "camp made"
-		echo "Oh, a berry bush. You take a few and eat them. Tasty." > bush
-		echo "bush made"
-	}
-
-	# story into func
-	start_adventure() {
-		clear
-		cat "/tmp/game/assets/cabin"
-		echo ""
-		echo "There you are, a noble adventurer, walking through the forest of Durur. You have been warned about the threats that reside in the forest by the passing village."
-		echo "You feel a shiver, when suddenly something catches your eye through the foliage."
-		echo ""
-		read -p "[Enter] to progress"
-		echo ""
-		echo "Being the adventurer that you are, of course you investigate."
-		read -p ""
-		cat "/tmp/game/assets/door"
-		echo ""
-		echo "Before you lies a door, ancient and mysterious, with a keyhole that whispers secrets of old."
-		echo "The key must be around here somewhere! Type 'ls -la' to get started."
-		echo ""
-		echo "Type 'cat hint' if you require a hint"
-		echo ""
-	}
-	# win condition and clean up func
-	check_win_condition() {
-		if [[ -f /tmp/game/inventory/key.txt ]]; then
-			echo "You swiftly pocket the key and turn around to find a shadow arching over the door-way"
-			read -p ""
-			echo "Congratulations! Challenge 1 complete. Keep hold of this flag -- 'great_b3ginn1ngs' -- for proof of completion"
-			rm -rf /tmp/game/inventory/key.txt
-			read -p ""
-			menu
-		fi
-	}
-
-	spawn_check
-	spawn_environment
-	start_adventure
-	user_interaction
-	menu 
-}
 
 # game menu
 menu() {
@@ -175,7 +88,7 @@ menu() {
 	read -p "Input: " user_input
 	case $user_input in
 		1)
-			level_1
+			bash ../levels/level_1
 			;;
 		2)
 #			level_2
@@ -214,4 +127,5 @@ menu() {
 	esac
 }
 
+spawn_check
 menu
